@@ -1,0 +1,9 @@
+// Query 1: Monitor VM Heartbeats
+Heartbeat
+| summarize Count = count() by Computer, bin(TimeGenerated, 5m)
+
+// Query 2: High CPU Usage
+Perf
+| where ObjectName == "Processor" and CounterName == "% Processor Time"
+| summarize AvgCPU = avg(CounterValue) by Computer, bin(TimeGenerated, 5m)
+| where AvgCPU > 80

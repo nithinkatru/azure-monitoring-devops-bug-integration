@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/alertRuleTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "alertRuleName": {
+        "type": "string",
+        "defaultValue": "CpuUsageAlert",
+        "metadata": { "description": "Name of the alert rule." }
+      },
+      "workspaceName": {
+        "type": "string",
+        "defaultValue": "MyLogAnalyticsWorkspace",
+        "metadata": { "description": "Name of the Log Analytics workspace." }
+      },
+      "workspaceId": {
+        "type": "string",
+        "metadata": { "description": "The resource ID of the Log Analytics workspace." }
+      },
+      "threshold": {
+        "type": "int",
+        "defaultValue": 80,
+        "metadata": { "description": "CPU usage threshold percentage." }
+      },
+      "evaluationFrequency": {
+        "type": "int",
+        "defaultValue": 5,
+        "metadata": { "description": "Frequency (in minutes) at which the query is evaluated." }
+      },
+      "windowSize": {
+        "type": "int",
+        "defaultValue": 15,
+        "metadata": { "description": "Time window size (in minutes) over which data is queried." }
+      },
+      "severity": {
+        "type": "int",
+        "defaultValue": 2,
+        "metadata": { "description": "Alert severity level." }
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Insights/scheduledQueryRules",
+        "apiVersion": "2018-04-16",
+        "name": "[parameters('alertRuleName')]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "description": "Alert if CPU usage exceeds the threshold.",
+          "enabled": true,
+          "source": {
+            "query": "Perf | where ObjectName == 'Processor' and CounterName == '% Processor Time' and CounterValue > [parameters('threshold')] | summarize AggregatedValue = avg(CounterValue) by Computer",
+            "dataSourceId": "[parameters('workspaceId')]",
+            "queryType": "ResultCount"
+          },
+          "schedule": {
+            "frequencyInMinutes": "[parameters('evaluationFrequency')]",
+            "timeWindowInMinutes": "[parameters('windowSize')]"
+          },
+          "action": {
+            "severity": "[parameters('severity')]",
+            "aznsAction": {
+              "actionGroup": []
+            }
+          }
+        }
+      }
+    ]
+  }
+  
